@@ -60,6 +60,13 @@ public final class NetworkUtils {
         return url;
     }
 
+    /**
+     * Gets data from a URLConnection, taken from CSNS
+     *
+     * @param url the URL object to connect to
+     * @return raw response from the URL in String form
+     * @throws IOException
+     */
     public static String getResponseFromHttpUrl(URL url) throws IOException {
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
         try {

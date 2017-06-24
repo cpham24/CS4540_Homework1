@@ -16,6 +16,7 @@ import edu.calstatela.cpham24.newsapp.utilities.NetworkUtils;
 public class MainActivity extends AppCompatActivity {
     private TextView mNewsResultTextView;
     private ProgressBar mProgressIndicator;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,6 +26,12 @@ public class MainActivity extends AppCompatActivity {
         loadCurrentNewsSource();
     }
 
+    /**
+     * Method that automatically loads the default news source (as defined in NetworkUtils)
+     *
+     * @param none
+     * @return none
+     */
     private void loadCurrentNewsSource() {
         // TODO (1) Replace this with the choice from a drop down list
         String newsSource = NetworkUtils.DEFAULT_NEWS_SOURCE;
@@ -32,6 +39,10 @@ public class MainActivity extends AppCompatActivity {
         new LoadLatestNewsTask().execute(newsSource);
     }
 
+    /**
+     * Subclass that extends AsyncTask to query network in the background
+     *
+     */
     public class LoadLatestNewsTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
@@ -47,8 +58,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 String jsonNewsResponse = NetworkUtils
                         .getResponseFromHttpUrl(newsQueryUrl);
-
-                //String[] simpleJsonWeatherData = OpenWeatherJsonUtils.getSimpleWeatherStringsFromJson(MainActivity.this, jsonWeatherResponse);
 
                 return jsonNewsResponse;
 
