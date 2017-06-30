@@ -7,12 +7,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 /**
  * Created by bill on 6/29/17.
  */
 
 public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterViewHolder> {
-    private String[] mNewsData;
+    private ArrayList<NewsItem> mNewsData;
 
     public NewsAdapter() {
 
@@ -29,32 +31,39 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterVie
 
     @Override
     public void onBindViewHolder(NewsAdapterViewHolder holder, int position) {
-        holder.mNewsTextView.setText(mNewsData[position]);
+        NewsItem item = mNewsData.get(position);
+        holder.mNewsTitleTextView.setText(item.title);
+        holder.mNewsDescTextView.setText(item.description);
+        holder.mNewsDateTextView.setText(item.date);
     }
 
     @Override
     public int getItemCount() {
         if(mNewsData == null)
             return 0;
-        return mNewsData.length;
+        return mNewsData.size();
     }
 
-    public void setNewsData(String[] newsData) {
+    public void setNewsData(ArrayList<NewsItem> newsData) {
         // safer to clone
-        mNewsData = newsData.clone();
+        mNewsData = (ArrayList<NewsItem>) newsData.clone();
         notifyDataSetChanged();
     }
 
     class NewsAdapterViewHolder extends RecyclerView.ViewHolder {
         // DONE (18) Create a public final TextView variable called mWeatherTextView
-        public final TextView mNewsTextView;
+        public final TextView mNewsTitleTextView;
+        public final TextView mNewsDescTextView;
+        public final TextView mNewsDateTextView;
 
         // DONE (19) Create a constructor for this class that accepts a View as a parameter
         // DONE (20) Call super(view) within the constructor for ForecastAdapterViewHolder
         // DONE (21) Using view.findViewById, get a reference to this layout's TextView and save it to mWeatherTextView
         public NewsAdapterViewHolder(View itemView) {
             super(itemView);
-            mNewsTextView = (TextView)itemView.findViewById(R.id.tv_news_data);
+            mNewsTitleTextView = (TextView)itemView.findViewById(R.id.tv_news_title);
+            mNewsDescTextView = (TextView)itemView.findViewById(R.id.tv_news_desc);
+            mNewsDateTextView = (TextView)itemView.findViewById(R.id.tv_news_date);
         }
     }
 }

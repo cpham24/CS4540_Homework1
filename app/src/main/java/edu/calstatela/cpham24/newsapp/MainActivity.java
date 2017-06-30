@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import edu.calstatela.cpham24.newsapp.utilities.NetworkUtils;
@@ -59,9 +60,9 @@ public class MainActivity extends AppCompatActivity {
      * Subclass that extends AsyncTask to query network in the background
      *
      */
-    public class LoadLatestNewsTask extends AsyncTask<String, Void, String[]> {
+    public class LoadLatestNewsTask extends AsyncTask<String, Void, ArrayList<NewsItem>> {
         @Override
-        protected String[] doInBackground(String... params) {
+        protected ArrayList<NewsItem> doInBackground(String... params) {
 
             /* If there's no source, there's nothing to look up. */
             if (params.length == 0) {
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 String jsonNewsResponse = NetworkUtils
                         .getResponseFromHttpUrl(newsQueryUrl);
-                String[] parsedJsonNewsData = NewsJsonUtils.getNewsStringsFromJson(MainActivity.this, jsonNewsResponse);
+                ArrayList<NewsItem> parsedJsonNewsData = NewsJsonUtils.getNewsStringsFromJson(MainActivity.this, jsonNewsResponse);
 
                 return parsedJsonNewsData;
 
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(String[] newsData) {
+        protected void onPostExecute(ArrayList<NewsItem> newsData) {
             if (newsData != null) {
                 mProgressIndicator.setVisibility(ProgressBar.INVISIBLE);
                 mNewsAdapter.setNewsData(newsData);

@@ -8,6 +8,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+
+import edu.calstatela.cpham24.newsapp.NewsItem;
 
 /**
  * Created by bill on 6/29/17.
@@ -15,7 +18,7 @@ import java.net.HttpURLConnection;
 
 // mirrored from Sunshine example and adapted to NewsAPI's response
 public final class NewsJsonUtils {
-    public static String[] getNewsStringsFromJson(Context context, String newsJsonStr)
+    public static ArrayList<NewsItem> getNewsStringsFromJson(Context context, String newsJsonStr)
             throws JSONException {
 
         /* News information. Each source's news articles are contained in the "articles" array */
@@ -33,7 +36,7 @@ public final class NewsJsonUtils {
         final String NEWSAPI_STATUS = "status";
 
         /* String array to hold each day's weather String */
-        String[] parsedNewsData = null;
+        ArrayList<NewsItem> newsData = new ArrayList<NewsItem>();
 
         JSONObject newsJson = new JSONObject(newsJsonStr);
 
@@ -46,19 +49,19 @@ public final class NewsJsonUtils {
 
         JSONArray articleArray = newsJson.getJSONArray(NEWSAPI_ARTICLES);
 
-        parsedNewsData = new String[articleArray.length()];
-
         for (int i = 0; i < articleArray.length(); i++) {
             JSONObject article = articleArray.getJSONObject(i);
 
             String author = article.getString(NEWSAPI_AUTHOR);
             String title = article.getString(NEWSAPI_TITLE);
+            String desc = article.getString(NEWSAPI_DESC);
             String date = article.getString(NEWSAPI_DATE);
             String url = article.getString(NEWSAPI_URL);
 
-            parsedNewsData[i] = title + "\n\n" + author + "\n\n" + date;
+            NewsItem item = new NewsItem(title, author, desc, date, url);
+            newsData.add(item);
         }
 
-        return parsedNewsData;
+        return newsData;
     }
 }
