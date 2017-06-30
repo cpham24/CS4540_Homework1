@@ -15,9 +15,15 @@ import java.util.ArrayList;
 
 public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterViewHolder> {
     private ArrayList<NewsItem> mNewsData;
+    ItemClickListener listener;
 
-    public NewsAdapter() {
+    public NewsAdapter(ArrayList<NewsItem> newsData, ItemClickListener listener) {
+        mNewsData = newsData;
+        this.listener = listener;
+    }
 
+    public interface ItemClickListener {
+        void onItemClick(int clickedItemIndex);
     }
 
     @Override
@@ -50,7 +56,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterVie
         notifyDataSetChanged();
     }
 
-    class NewsAdapterViewHolder extends RecyclerView.ViewHolder {
+    class NewsAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         // DONE (18) Create a public final TextView variable called mWeatherTextView
         public final TextView mNewsTitleTextView;
         public final TextView mNewsDescTextView;
@@ -64,6 +70,13 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterVie
             mNewsTitleTextView = (TextView)itemView.findViewById(R.id.tv_news_title);
             mNewsDescTextView = (TextView)itemView.findViewById(R.id.tv_news_desc);
             mNewsDateTextView = (TextView)itemView.findViewById(R.id.tv_news_date);
+            itemView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int pos = getAdapterPosition();
+            listener.onItemClick(pos);
         }
     }
 }

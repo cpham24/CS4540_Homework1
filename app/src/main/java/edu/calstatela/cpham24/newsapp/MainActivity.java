@@ -1,10 +1,13 @@
 package edu.calstatela.cpham24.newsapp;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -37,9 +40,6 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
 
-        mNewsAdapter = new NewsAdapter();
-        mRecyclerView.setAdapter(mNewsAdapter);
-
         loadCurrentNewsSource();
     }
 
@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
     private void loadCurrentNewsSource() {
         // TODO (1) Replace this with the choice from a drop down list
         String newsSource = NetworkUtils.DEFAULT_NEWS_SOURCE;
-        mProgressIndicator.setVisibility(ProgressBar.VISIBLE);
         new LoadLatestNewsTask().execute(newsSource);
     }
 
@@ -61,6 +60,12 @@ public class MainActivity extends AppCompatActivity {
      *
      */
     public class LoadLatestNewsTask extends AsyncTask<String, Void, ArrayList<NewsItem>> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mProgressIndicator.setVisibility(ProgressBar.VISIBLE);
+        }
+
         @Override
         protected ArrayList<NewsItem> doInBackground(String... params) {
 
@@ -86,10 +91,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(ArrayList<NewsItem> newsData) {
+        protected void onPostExecute(final ArrayList<NewsItem> newsData) {
+            super.onPostExecute(newsData);
+            mProgressIndicator.setVisibility(ProgressBar.GONE);
             if (newsData != null) {
-                mProgressIndicator.setVisibility(ProgressBar.INVISIBLE);
-                mNewsAdapter.setNewsData(newsData);
+                // this was copied from Mark's example
+                mNewsAdapter = new NewsAdapter(newsData,
+                        new NewsAdapter.ItemClickListener(){
+                            @Override
+                            public void onItemClick(int clickedItemIndex) {
+                                NewsItem item = newsData.get(clickedItemIndex);
+                                String url = item.url;
+                                Log.d("NewsApp", String.format("Opening Url %s", url));
+
+                                // I took the below code from StackOverflow
+                                Intent viewURLIntent = new Intent(Intent.ACTION_VIEW);
+                                viewURLIntent.setData(Uri.parse(url));
+                                startActivity(viewURLIntent);
+                            }
+                        });
+                mRecyclerView.setAdapter(mNewsAdapter);
                 //mNewsResultTextView.setText(newsData);
             }
         }

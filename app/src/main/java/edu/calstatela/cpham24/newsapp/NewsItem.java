@@ -12,11 +12,11 @@ public class NewsItem {
     public String imgurl;
     public String date;
 
-    public NewsItem(String title, String author, String description, String date, String imgurl) {
+    public NewsItem(String title, String author, String description, String date, String url) {
         this.title = title;
         this.author = author;
         this.description = description;
         this.date = date;
-        this.imgurl = imgurl;
+        this.url = url;
     }
 }
