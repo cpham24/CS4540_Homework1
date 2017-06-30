@@ -3,8 +3,11 @@ package edu.calstatela.cpham24.newsapp;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -12,17 +15,30 @@ import java.net.URL;
 import java.util.LinkedHashMap;
 
 import edu.calstatela.cpham24.newsapp.utilities.NetworkUtils;
+import edu.calstatela.cpham24.newsapp.utilities.NewsJsonUtils;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView mNewsResultTextView;
+    private RecyclerView mRecyclerView;
+    private NewsAdapter mNewsAdapter;
+    //private TextView mNewsResultTextView;
     private ProgressBar mProgressIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mNewsResultTextView = (TextView) findViewById(R.id.news_result_text);
+
         mProgressIndicator = (ProgressBar) findViewById(R.id.progress_indicator);
+
+        mRecyclerView = (RecyclerView)findViewById(R.id.recyclerview_news);
+        //mNewsResultTextView = (TextView) findViewById(R.id.news_result_text);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.setHasFixedSize(true);
+
+        mNewsAdapter = new NewsAdapter();
+        mRecyclerView.setAdapter(mNewsAdapter);
+
         loadCurrentNewsSource();
     }
 
@@ -43,9 +59,9 @@ public class MainActivity extends AppCompatActivity {
      * Subclass that extends AsyncTask to query network in the background
      *
      */
-    public class LoadLatestNewsTask extends AsyncTask<String, Void, String> {
+    public class LoadLatestNewsTask extends AsyncTask<String, Void, String[]> {
         @Override
-        protected String doInBackground(String... params) {
+        protected String[] doInBackground(String... params) {
 
             /* If there's no source, there's nothing to look up. */
             if (params.length == 0) {
@@ -58,8 +74,9 @@ public class MainActivity extends AppCompatActivity {
             try {
                 String jsonNewsResponse = NetworkUtils
                         .getResponseFromHttpUrl(newsQueryUrl);
+                String[] parsedJsonNewsData = NewsJsonUtils.getNewsStringsFromJson(MainActivity.this, jsonNewsResponse);
 
-                return jsonNewsResponse;
+                return parsedJsonNewsData;
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -68,10 +85,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(String newsData) {
+        protected void onPostExecute(String[] newsData) {
             if (newsData != null) {
                 mProgressIndicator.setVisibility(ProgressBar.INVISIBLE);
-                mNewsResultTextView.setText(newsData);
+                mNewsAdapter.setNewsData(newsData);
+                //mNewsResultTextView.setText(newsData);
             }
         }
     }

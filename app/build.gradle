@@ -21,6 +21,12 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    // for compatibility
+    compile 'com.android.support:appcompat-v7:25.1.0'
+
+    // need this for RecyclerView
+    compile 'com.android.support:recyclerview-v7:25.0.1'
+
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
