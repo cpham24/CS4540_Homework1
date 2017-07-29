@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         loaderManager.restartLoader(NEWSLOADER, null, this).forceLoad();
     }
 
+    // Method that updates the recycler view whenever data is fetched from the database or over network
     private void updateView(Cursor cursor) {
         mNewsAdapter = new NewsAdapter(cursor,
                 new NewsAdapter.ItemClickListener(){
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     protected void onStart() {
         super.onStart();
+        Log.d(TAG, "revived, restoring connections");
         db = new DBHelper(MainActivity.this).getReadableDatabase();
         cursor = DatabaseUtils.getAll(db);
         updateView(cursor);
@@ -112,6 +114,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d(TAG, "died, severing connections");
+        // fixes weird bug (at least on my phone) where the progress bar
+        // is set to "visible" upon "stop"
+        mProgressIndicator.setVisibility(View.GONE);
         db.close();
         cursor.close();
     }
@@ -155,7 +161,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemThatWasClickedId = item.getItemId();
-        if (itemThatWasClickedId == R.id.action_search) {
+        if (itemThatWasClickedId == R.id.action_refresh) {
             loadCurrentNewsSource();
             return true;
         }
