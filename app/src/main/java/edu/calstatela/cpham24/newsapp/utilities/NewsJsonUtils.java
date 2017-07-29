@@ -1,16 +1,14 @@
 package edu.calstatela.cpham24.newsapp.utilities;
 
-import android.content.ContentValues;
 import android.content.Context;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 
-import edu.calstatela.cpham24.newsapp.NewsItem;
+import edu.calstatela.cpham24.newsapp.data.NewsItem;
 
 /**
  * Created by bill on 6/29/17.
@@ -18,6 +16,7 @@ import edu.calstatela.cpham24.newsapp.NewsItem;
 
 // mirrored from Sunshine example and adapted to NewsAPI's response
 public final class NewsJsonUtils {
+
     public static ArrayList<NewsItem> getNewsStringsFromJson(Context context, String newsJsonStr)
             throws JSONException {
 
@@ -57,8 +56,9 @@ public final class NewsJsonUtils {
             String desc = article.getString(NEWSAPI_DESC);
             String date = article.getString(NEWSAPI_DATE);
             String url = article.getString(NEWSAPI_URL);
+            String imgurl = article.getString(NEWSAPI_IMGURL);
 
-            NewsItem item = new NewsItem(title, author, desc, date, url);
+            NewsItem item = new NewsItem(title, author, desc, date, url, imgurl);
             newsData.add(item);
         }
 

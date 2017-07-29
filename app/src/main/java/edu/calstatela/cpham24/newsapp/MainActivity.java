@@ -1,6 +1,8 @@
 package edu.calstatela.cpham24.newsapp;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -10,18 +12,22 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
+import edu.calstatela.cpham24.newsapp.data.Contract;
+import edu.calstatela.cpham24.newsapp.data.DBHelper;
+import edu.calstatela.cpham24.newsapp.data.NewsItem;
 import edu.calstatela.cpham24.newsapp.utilities.NetworkUtils;
 import edu.calstatela.cpham24.newsapp.utilities.NewsJsonUtils;
 
 public class MainActivity extends AppCompatActivity {
+    private final String TAG = "mainactivity";
+    private DBHelper helper;
+    private Cursor cursor;
+    private SQLiteDatabase db;
     private RecyclerView mRecyclerView;
     private NewsAdapter mNewsAdapter;
     //private TextView mNewsResultTextView;
