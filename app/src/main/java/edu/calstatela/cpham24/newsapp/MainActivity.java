@@ -34,7 +34,7 @@ import edu.calstatela.cpham24.newsapp.data.NewsItem;
 import edu.calstatela.cpham24.newsapp.utilities.NetworkUtils;
 import edu.calstatela.cpham24.newsapp.utilities.NewsJsonUtils;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Void> {
+public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
     private DBHelper helper;
     private Cursor cursor;
@@ -79,9 +79,43 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     // Method that automatically loads the default news source (as defined in NetworkUtils)
     private void loadCurrentNewsSource() {
-        // TODO (1) Replace this with the choice from a drop down list
-        LoaderManager loaderManager = getSupportLoaderManager();
-        loaderManager.restartLoader(NEWSLOADER, null, this).forceLoad();
+        // creating callback inline because onCreateLoader was called along with onStart when
+        // MainActivity comes back online, and that's not the right behavior
+        LoaderManager lm = getSupportLoaderManager();
+        lm.restartLoader(NEWSLOADER, null, new LoaderManager.LoaderCallbacks<Void>() {
+            // overriding onCreateLoader to start the AsyncTaskLoader
+            @Override
+            public Loader<Void> onCreateLoader(int id, Bundle args) {
+                return new AsyncTaskLoader<Void>(context) {
+                    @Override
+                    protected void onStartLoading() {
+                        super.onStartLoading();
+                        mProgressIndicator.setVisibility(View.VISIBLE);
+                        Log.d(TAG, "starting async task to load articles in background");
+                    }
+
+                    @Override
+                    public Void loadInBackground() {
+                        RefreshTask.refreshArticles(context);
+                        return null;
+                    }
+                };
+            }
+
+            // overriding onLoadFinished to load from db into view
+            @Override
+            public void onLoadFinished(Loader<Void> loader, Void data) {
+                db = new DBHelper(MainActivity.this).getReadableDatabase();
+                cursor = DatabaseUtils.getAll(db);
+                updateView(cursor);
+                mProgressIndicator.setVisibility(ProgressBar.GONE);
+            }
+
+            @Override
+            public void onLoaderReset(Loader<Void> loader) {
+                // doesn't really do anything but is required for the interface
+            }
+        }).forceLoad();
     }
 
     // Method that updates the recycler view whenever data is fetched from the database or over network
@@ -119,44 +153,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     protected void onStop() {
         super.onStop();
         Log.d(TAG, "died, severing connections");
-        // fixes weird bug (at least on my phone) where the progress bar
-        // is set to "visible" upon "stop"
-        mProgressIndicator.setVisibility(View.GONE);
         db.close();
         cursor.close();
-    }
-
-    // overriding onCreateLoader to start the AsyncTaskLoader
-    @Override
-    public Loader<Void> onCreateLoader(int id, Bundle args) {
-        return new AsyncTaskLoader<Void>(context) {
-            @Override
-            protected void onStartLoading() {
-                super.onStartLoading();
-                mProgressIndicator.setVisibility(View.VISIBLE);
-                Log.d(TAG, "starting async task to load articles in background");
-            }
-
-            @Override
-            public Void loadInBackground() {
-                RefreshTask.refreshArticles(context);
-                return null;
-            }
-        };
-    }
-
-    // overriding onLoadFinished to load from db into view
-    @Override
-    public void onLoadFinished(Loader<Void> loader, Void data) {
-        db = new DBHelper(MainActivity.this).getReadableDatabase();
-        cursor = DatabaseUtils.getAll(db);
-        updateView(cursor);
-        mProgressIndicator.setVisibility(ProgressBar.GONE);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Void> loader) {
-        // this doesn't do anything but is required by the interface
     }
 
     @Override
