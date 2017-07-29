@@ -32,6 +32,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterVie
         mListener = listener;
     }
 
+    // modified this interface to pass along a db cursor as well
     public interface ItemClickListener {
         void onItemClick(Cursor cursor, int clickedItemIndex);
     }
@@ -80,6 +81,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterVie
             mListener.onItemClick(mCursor, pos);
         }
 
+        // modified this method so that it loads data from a db cursor now instead of a NewsItem object in an ArrayList
         public void loadNewsContent(int position) {
             mCursor.moveToPosition(position);
             mNewsTitleTextView.setText(mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_TITLE)));

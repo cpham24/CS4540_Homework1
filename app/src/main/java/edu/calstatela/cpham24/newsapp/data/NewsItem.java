@@ -4,6 +4,7 @@ package edu.calstatela.cpham24.newsapp.data;
  * Created by bill on 6/29/17.
  */
 
+// moved this class into the data sub package because it's only used to load data into db now
 public class NewsItem {
     public String title;
     public String author;

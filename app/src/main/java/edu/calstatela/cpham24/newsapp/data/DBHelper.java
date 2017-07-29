@@ -11,8 +11,8 @@ import android.util.Log;
 
 // adapted this class to work with the news app (changed initialization method to create a specialized DB)
 public class DBHelper extends SQLiteOpenHelper{
-
     private static final int DATABASE_VERSION = 1;
+    // changed the name of the database to avoid conflicts
     private static final String DATABASE_NAME = "news.db";
     private static final String TAG = "dbhelper";
 
@@ -22,7 +22,7 @@ public class DBHelper extends SQLiteOpenHelper{
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // changed the structure of the query in order to include the checkbox state
+        // changed the structure of this query to include relevant news info
         String queryString = "CREATE TABLE " + Contract.TABLE_TODO.TABLE_NAME + " ("+
                 Contract.TABLE_TODO._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 Contract.TABLE_TODO.COLUMN_NAME_TITLE + " TEXT NOT NULL, " +

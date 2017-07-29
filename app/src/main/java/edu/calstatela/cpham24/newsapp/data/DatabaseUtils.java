@@ -28,6 +28,7 @@ public class DatabaseUtils {
         return cursor;
     }
 
+    // modified this function to fit the new db schema
     public static void bulkInsert(SQLiteDatabase db, ArrayList<NewsItem> items) {
         db.beginTransaction();
         try {

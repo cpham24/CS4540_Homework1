@@ -47,6 +47,8 @@ public class RefreshTask {
             String json = NetworkUtils.getResponseFromHttpUrl(url);
             result = NewsJsonUtils.getNewsStringsFromJson(context, json);
             DatabaseUtils.bulkInsert(db, result);
+            // added this log statement to show that this task has finished running
+            // and the database has been updated with new data from network
             Log.d(TAG, "loaded from network and updated db");
         } catch (Exception e) { // catch all exceptions
             e.printStackTrace();

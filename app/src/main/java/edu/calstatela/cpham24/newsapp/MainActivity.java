@@ -66,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         boolean isFirst = prefs.getBoolean("isfirst", true);
 
         if (isFirst) {
+            // if it's the first run (meaning there is nothing in the database)
+            // then load from the network
             loadCurrentNewsSource();
 
             SharedPreferences.Editor editor = prefs.edit();
@@ -102,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mNewsAdapter.notifyDataSetChanged();
     }
 
+    // overriding onStart to load from db every time the app starts/resumes
     @Override
     protected void onStart() {
         super.onStart();
@@ -111,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         updateView(cursor);
     }
 
+    // overriding onStop to "clean up" every time the app is shut down
     @Override
     protected void onStop() {
         super.onStop();
@@ -122,6 +126,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         cursor.close();
     }
 
+    // overriding onCreateLoader to start the AsyncTaskLoader
     @Override
     public Loader<Void> onCreateLoader(int id, Bundle args) {
         return new AsyncTaskLoader<Void>(context) {
@@ -139,6 +144,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         };
     }
 
+    // overriding onLoadFinished to load from db into view
     @Override
     public void onLoadFinished(Loader<Void> loader, Void data) {
         db = new DBHelper(MainActivity.this).getReadableDatabase();
@@ -149,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoaderReset(Loader<Void> loader) {
-
+        // this doesn't do anything but is required by the interface
     }
 
     @Override

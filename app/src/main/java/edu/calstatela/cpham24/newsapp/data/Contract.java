@@ -6,7 +6,7 @@ import android.provider.BaseColumns;
  * Created by mark on 7/4/17.
  */
 
-// copied and adapted this class for use with the news app (changed parameters)
+// copied and adapted this class from To Do assignment for use with news app (changed parameters)
 public class Contract {
 
     public static class TABLE_TODO implements BaseColumns{
