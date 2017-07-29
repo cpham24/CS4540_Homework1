@@ -134,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             protected void onStartLoading() {
                 super.onStartLoading();
                 mProgressIndicator.setVisibility(View.VISIBLE);
+                Log.d(TAG, "starting async task to load articles in background");
             }
 
             @Override
