@@ -80,7 +80,10 @@ public class MainActivity extends AppCompatActivity {
     // Method that automatically loads the default news source (as defined in NetworkUtils)
     private void loadCurrentNewsSource() {
         // creating callback inline because onCreateLoader was called along with onStart when
-        // MainActivity comes back online, and that's not the right behavior
+        // MainActivity came back online, and that's not the right behavior
+        // this also offloads an implementation from MainActivity, and we don't even use
+        // this callback that often (we essentially only need it when the user press the
+        // "refresh" button or when the app first launches
         LoaderManager lm = getSupportLoaderManager();
         lm.restartLoader(NEWSLOADER, null, new LoaderManager.LoaderCallbacks<Void>() {
             // overriding onCreateLoader to start the AsyncTaskLoader
