@@ -1,10 +1,16 @@
 package edu.calstatela.cpham24.newsapp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,18 +18,23 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ProgressBar;
 
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
 import edu.calstatela.cpham24.newsapp.data.Contract;
 import edu.calstatela.cpham24.newsapp.data.DBHelper;
+import edu.calstatela.cpham24.newsapp.data.DatabaseUtils;
 import edu.calstatela.cpham24.newsapp.data.NewsItem;
 import edu.calstatela.cpham24.newsapp.utilities.NetworkUtils;
 import edu.calstatela.cpham24.newsapp.utilities.NewsJsonUtils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Void> {
     private final String TAG = "mainactivity";
     private DBHelper helper;
     private Cursor cursor;
@@ -32,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     private NewsAdapter mNewsAdapter;
     //private TextView mNewsResultTextView;
     private ProgressBar mProgressIndicator;
+    private static final int NEWSLOADER = 1;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +59,23 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
 
-        loadCurrentNewsSource();
+        // saving the current context to get easier references
+        context = this;
+
+        // copied this from Mark's NYTimesMostPopular example to handle first time opening the app
+        // plus modified it a bit to match my own app
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isFirst = prefs.getBoolean("isfirst", true);
+
+        if (isFirst) {
+            loadCurrentNewsSource();
+
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putBoolean("isfirst", false);
+            editor.commit();
+        }
+        // not quite ready to implement a scheduler yet
+        // ScheduleUtilities.scheduleRefresh(context);
     }
 
     /**
@@ -57,69 +86,87 @@ public class MainActivity extends AppCompatActivity {
      */
     private void loadCurrentNewsSource() {
         // TODO (1) Replace this with the choice from a drop down list
-        String newsSource = NetworkUtils.DEFAULT_NEWS_SOURCE;
-        new LoadLatestNewsTask().execute(newsSource);
+        LoaderManager loaderManager = getSupportLoaderManager();
+        loaderManager.restartLoader(NEWSLOADER, null, this).forceLoad();
     }
 
-    /**
-     * Subclass that extends AsyncTask to query network in the background
-     *
-     */
-    public class LoadLatestNewsTask extends AsyncTask<String, Void, ArrayList<NewsItem>> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mProgressIndicator.setVisibility(ProgressBar.VISIBLE);
-        }
+    private void updateView(Cursor cursor) {
+        mNewsAdapter = new NewsAdapter(cursor,
+                new NewsAdapter.ItemClickListener(){
+                    @Override
+                    public void onItemClick(Cursor cursor, int clickedItemIndex) {
+                        cursor.moveToPosition(clickedItemIndex);
+                        String url = cursor.getString(cursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_URL));
+                        Log.d("NewsApp", String.format("Opening Url %s", url));
 
-        @Override
-        protected ArrayList<NewsItem> doInBackground(String... params) {
+                        // I took the below code from StackOverflow
+                        Intent viewURLIntent = new Intent(Intent.ACTION_VIEW);
+                        viewURLIntent.setData(Uri.parse(url));
+                        startActivity(viewURLIntent);
+                    }
+                });
+        mRecyclerView.setAdapter(mNewsAdapter);
+        mNewsAdapter.notifyDataSetChanged();
+    }
 
-            /* If there's no source, there's nothing to look up. */
-            if (params.length == 0) {
+    @Override
+    protected void onStart() {
+        super.onStart();
+        db = new DBHelper(MainActivity.this).getReadableDatabase();
+        cursor = DatabaseUtils.getAll(db);
+        updateView(cursor);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        db.close();
+        cursor.close();
+    }
+
+    @Override
+    public Loader<Void> onCreateLoader(int id, Bundle args) {
+        return new AsyncTaskLoader<Void>(context) {
+            @Override
+            protected void onStartLoading() {
+                super.onStartLoading();
+                mProgressIndicator.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public Void loadInBackground() {
+                ArrayList<NewsItem> result = null;
+                URL url = NetworkUtils.buildUrl(NetworkUtils.DEFAULT_NEWS_SOURCE);
+
+                SQLiteDatabase db = new DBHelper(context).getWritableDatabase();
+
+                try {
+                    DatabaseUtils.deleteAll(db);
+                    String json = NetworkUtils.getResponseFromHttpUrl(url);
+                    result = NewsJsonUtils.getNewsStringsFromJson(context, json);
+                    DatabaseUtils.bulkInsert(db, result);
+                } catch (Exception e) { // catch all exceptions
+                    e.printStackTrace();
+                }
+
+                db.close();
+
                 return null;
             }
+        };
+    }
 
-            String source = params[0];
-            URL newsQueryUrl = NetworkUtils.buildUrl(source);
+    @Override
+    public void onLoadFinished(Loader<Void> loader, Void data) {
+        db = new DBHelper(MainActivity.this).getReadableDatabase();
+        cursor = DatabaseUtils.getAll(db);
+        updateView(cursor);
+        mProgressIndicator.setVisibility(ProgressBar.GONE);
+    }
 
-            try {
-                String jsonNewsResponse = NetworkUtils
-                        .getResponseFromHttpUrl(newsQueryUrl);
-                ArrayList<NewsItem> parsedJsonNewsData = NewsJsonUtils.getNewsStringsFromJson(MainActivity.this, jsonNewsResponse);
+    @Override
+    public void onLoaderReset(Loader<Void> loader) {
 
-                return parsedJsonNewsData;
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(final ArrayList<NewsItem> newsData) {
-            super.onPostExecute(newsData);
-            mProgressIndicator.setVisibility(ProgressBar.GONE);
-            if (newsData != null) {
-                // this was copied from Mark's example
-                mNewsAdapter = new NewsAdapter(newsData,
-                        new NewsAdapter.ItemClickListener(){
-                            @Override
-                            public void onItemClick(int clickedItemIndex) {
-                                NewsItem item = newsData.get(clickedItemIndex);
-                                String url = item.url;
-                                Log.d("NewsApp", String.format("Opening Url %s", url));
-
-                                // I took the below code from StackOverflow
-                                Intent viewURLIntent = new Intent(Intent.ACTION_VIEW);
-                                viewURLIntent.setData(Uri.parse(url));
-                                startActivity(viewURLIntent);
-                            }
-                        });
-                mRecyclerView.setAdapter(mNewsAdapter);
-                //mNewsResultTextView.setText(newsData);
-            }
-        }
     }
 
     @Override

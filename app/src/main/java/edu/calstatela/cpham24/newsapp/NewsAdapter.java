@@ -1,9 +1,7 @@
 package edu.calstatela.cpham24.newsapp;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,9 +10,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 
+import edu.calstatela.cpham24.newsapp.data.Contract;
 import edu.calstatela.cpham24.newsapp.data.NewsItem;
 import com.squareup.picasso.Picasso;
 
@@ -23,46 +21,44 @@ import com.squareup.picasso.Picasso;
  */
 
 public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterViewHolder> {
-    private ArrayList<NewsItem> mNewsData;
-    ItemClickListener listener;
-    Context context;
+    private Cursor mCursor;
+    private ItemClickListener mListener;
+    private Context mContext;
     public static final String TAG = "NewsAdapter";
 
-    public NewsAdapter(ArrayList<NewsItem> newsData, ItemClickListener listener) {
-        mNewsData = newsData;
-        this.listener = listener;
+    public NewsAdapter(Cursor cursor, ItemClickListener listener) {
+        mCursor = cursor;
+        mListener = listener;
     }
 
     public interface ItemClickListener {
-        void onItemClick(int clickedItemIndex);
+        void onItemClick(Cursor cursor, int clickedItemIndex);
     }
 
     @Override
     public NewsAdapterViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        context = parent.getContext();
+        mContext = parent.getContext();
         int id = R.layout.news_list_item;
-        View view = LayoutInflater.from(context).inflate(id, parent, false);
+        View view = LayoutInflater.from(mContext).inflate(id, parent, false);
 
         return new NewsAdapterViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(NewsAdapterViewHolder holder, int position) {
-        NewsItem item = mNewsData.get(position);
+        mCursor.moveToPosition(position);
+        NewsItem item = new NewsItem(mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_TITLE)),
+                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_AUTHOR)),
+                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_DESCRIPTION)),
+                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_DATE)),
+                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_URL)),
+                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_IMGURL)));
         holder.loadNewsContent(item);
     }
 
     @Override
     public int getItemCount() {
-        if(mNewsData == null)
-            return 0;
-        return mNewsData.size();
-    }
-
-    public void setNewsData(ArrayList<NewsItem> newsData) {
-        // safer to clone
-        mNewsData = (ArrayList<NewsItem>) newsData.clone();
-        notifyDataSetChanged();
+        return mCursor.getCount();
     }
 
     class NewsAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -87,15 +83,17 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterVie
         @Override
         public void onClick(View v) {
             int pos = getAdapterPosition();
-            listener.onItemClick(pos);
+            mListener.onItemClick(mCursor, pos);
         }
 
         public void loadNewsContent(NewsItem item) {
             mNewsTitleTextView.setText(item.title);
             mNewsDescTextView.setText(item.description);
             mNewsDateTextView.setText(item.date);
+
+            // replaced AsyncTask image loader with Picasso (so much easier!)
             if(item.imgurl != null) {
-                Picasso.with(context).load(item.imgurl).into(mNewsImageView);
+                Picasso.with(mContext).load(item.imgurl).into(mNewsImageView);
             }
         }
     }
