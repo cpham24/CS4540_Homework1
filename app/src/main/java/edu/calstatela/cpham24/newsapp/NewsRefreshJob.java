@@ -21,7 +21,7 @@ public class NewsRefreshJob extends JobService {
             protected void onPreExecute() {
                 // modified the text of the Toast prompt to avoid conflicts with Mark's NYTimesMostPopular example
                 // since I also have the example on my phone and it's unclear which one is refreshing
-                Toast.makeText(NewsRefreshJob.this, "News refreshed in background", Toast.LENGTH_SHORT).show();
+                Toast.makeText(NewsRefreshJob.this, "TNW Most Currents is up to date", Toast.LENGTH_SHORT).show();
                 super.onPreExecute();
             }
 
