@@ -35,13 +35,12 @@ import edu.calstatela.cpham24.newsapp.utilities.NetworkUtils;
 import edu.calstatela.cpham24.newsapp.utilities.NewsJsonUtils;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Void> {
-    private final String TAG = "mainactivity";
+    private final String TAG = "MainActivity";
     private DBHelper helper;
     private Cursor cursor;
     private SQLiteDatabase db;
     private RecyclerView mRecyclerView;
     private NewsAdapter mNewsAdapter;
-    //private TextView mNewsResultTextView;
     private ProgressBar mProgressIndicator;
     private static final int NEWSLOADER = 1;
     private Context context;
@@ -54,7 +53,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mProgressIndicator = (ProgressBar) findViewById(R.id.progress_indicator);
 
         mRecyclerView = (RecyclerView)findViewById(R.id.recyclerview_news);
-        //mNewsResultTextView = (TextView) findViewById(R.id.news_result_text);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
@@ -74,16 +72,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             editor.putBoolean("isfirst", false);
             editor.commit();
         }
-        // not quite ready to implement a scheduler yet
-        // ScheduleUtilities.scheduleRefresh(context);
+        ScheduleUtilities.scheduleRefresh(context);
     }
 
-    /**
-     * Method that automatically loads the default news source (as defined in NetworkUtils)
-     *
-     * @param none
-     * @return none
-     */
+    // Method that automatically loads the default news source (as defined in NetworkUtils)
     private void loadCurrentNewsSource() {
         // TODO (1) Replace this with the choice from a drop down list
         LoaderManager loaderManager = getSupportLoaderManager();
@@ -97,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     public void onItemClick(Cursor cursor, int clickedItemIndex) {
                         cursor.moveToPosition(clickedItemIndex);
                         String url = cursor.getString(cursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_URL));
-                        Log.d("NewsApp", String.format("Opening Url %s", url));
+                        Log.d(TAG, String.format("opening Url %s", url));
 
                         // I took the below code from StackOverflow
                         Intent viewURLIntent = new Intent(Intent.ACTION_VIEW);
@@ -135,22 +127,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
             @Override
             public Void loadInBackground() {
-                ArrayList<NewsItem> result = null;
-                URL url = NetworkUtils.buildUrl(NetworkUtils.DEFAULT_NEWS_SOURCE);
-
-                SQLiteDatabase db = new DBHelper(context).getWritableDatabase();
-
-                try {
-                    DatabaseUtils.deleteAll(db);
-                    String json = NetworkUtils.getResponseFromHttpUrl(url);
-                    result = NewsJsonUtils.getNewsStringsFromJson(context, json);
-                    DatabaseUtils.bulkInsert(db, result);
-                } catch (Exception e) { // catch all exceptions
-                    e.printStackTrace();
-                }
-
-                db.close();
-
+                RefreshTask.refreshArticles(context);
                 return null;
             }
         };

@@ -20,6 +20,7 @@ import com.squareup.picasso.Picasso;
  * Created by bill on 6/29/17.
  */
 
+// modified the adapter so that it loads from the database cursor instead of an ArrayList of NewsItem
 public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterViewHolder> {
     private Cursor mCursor;
     private ItemClickListener mListener;
@@ -46,14 +47,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterVie
 
     @Override
     public void onBindViewHolder(NewsAdapterViewHolder holder, int position) {
-        mCursor.moveToPosition(position);
-        NewsItem item = new NewsItem(mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_TITLE)),
-                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_AUTHOR)),
-                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_DESCRIPTION)),
-                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_DATE)),
-                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_URL)),
-                                     mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_IMGURL)));
-        holder.loadNewsContent(item);
+        holder.loadNewsContent(position);
     }
 
     @Override
@@ -86,14 +80,16 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsAdapterVie
             mListener.onItemClick(mCursor, pos);
         }
 
-        public void loadNewsContent(NewsItem item) {
-            mNewsTitleTextView.setText(item.title);
-            mNewsDescTextView.setText(item.description);
-            mNewsDateTextView.setText(item.date);
+        public void loadNewsContent(int position) {
+            mCursor.moveToPosition(position);
+            mNewsTitleTextView.setText(mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_TITLE)));
+            mNewsDescTextView.setText(mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_DESCRIPTION)));
+            mNewsDateTextView.setText(mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_DATE)));
+            String imgurl = mCursor.getString(mCursor.getColumnIndex(Contract.TABLE_TODO.COLUMN_NAME_IMGURL));
 
             // replaced AsyncTask image loader with Picasso (so much easier!)
-            if(item.imgurl != null) {
-                Picasso.with(mContext).load(item.imgurl).into(mNewsImageView);
+            if(imgurl != null) {
+                Picasso.with(mContext).load(imgurl).into(mNewsImageView);
             }
         }
     }

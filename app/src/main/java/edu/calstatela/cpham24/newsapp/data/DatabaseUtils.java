@@ -29,7 +29,6 @@ public class DatabaseUtils {
     }
 
     public static void bulkInsert(SQLiteDatabase db, ArrayList<NewsItem> items) {
-
         db.beginTransaction();
         try {
             for (NewsItem i : items) {
